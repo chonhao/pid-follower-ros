@@ -1,0 +1,3 @@
+uint8 is_obj_being_tracked
+float64 direction_err
+float64 distance_err
