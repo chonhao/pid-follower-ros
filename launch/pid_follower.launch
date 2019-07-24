@@ -1,7 +1,7 @@
 <launch>
     <node name="pid_follower_node" pkg="pid_follower" type="pid_follower_node" output="screen">
-        <param name="distance_max_out" type="double" value="0.5"/>
-        <param name="distance_integral_limit" type="double" value="0.5"/>
+        <param name="distance_max_out" type="double" value="0.25"/>
+        <param name="distance_integral_limit" type="double" value="0.25"/>
         <param name="distance_kp"  type="double" value="0.0001"/>
         <param name="distance_ki"  type="double" value="0"/>
         <param name="distance_kd"  type="double" value="0"/>

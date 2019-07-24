@@ -119,7 +119,7 @@ int main(int argc, char **argv){
 
         ROS_INFO("output %lf", direction_output);
 
-        if(follower_err.is_obj_being_tracked){
+        if(follower_err.is_obj_being_tracked && follower_err.distance_err > 0){
             setSpeed(SPEED_LINEAR, -1 * distance_output);
             setSpeed(SPEED_ANGULAR, direction_output);
         }else{
