@@ -1,6 +1,6 @@
 <launch>
     <node name="pid_follower_node" pkg="pid_follower" type="pid_follower_node" output="screen">
-        <param name="distance_max_out" type="double" value="0.25"/>
+        <param name="distance_max_out" type="double" value="0"/>
         <param name="distance_integral_limit" type="double" value="0.25"/>
         <param name="distance_kp"  type="double" value="0.0001"/>
         <param name="distance_ki"  type="double" value="0"/>
@@ -8,9 +8,9 @@
 
         <param name="direction_max_out" type="double" value="2"/>
         <param name="direction_integral_limit" type="double" value="2"/>
-        <param name="direction_kp" type="double" value="0.0008"/>
-        <param name="direction_ki" type="double" value="0.000001"/>
-        <param name="direction_kd" type="double" value="0.00005"/>
+        <param name="direction_kp" type="double" value="0.0010"/>
+        <param name="direction_ki" type="double" value="0.000000"/>
+        <param name="direction_kd" type="double" value="0.001"/>
 
         <param name="distance_target"  type="double" value="1000"/>
         <param name="direction_target" type="double" value="0"/>

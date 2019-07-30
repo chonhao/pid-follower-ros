@@ -19,7 +19,21 @@ tracker = None
 # tracker = cv2.TrackerGOTURN_create()
 initBB = None
 
-ADJUST_PID = False
+ADJUST_PID = True
+
+blurriness_threshold = 750
+
+def get_blurriness(frame):
+	gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+	fm = cv2.Laplacian(gray, cv2.CV_64F).var()
+	return fm
+
+def is_image_blurry(frame):
+	fm = get_blurriness(frame)
+	if fm < blurriness_threshold:
+		print("blurry")
+		return True
+	return False
 
 def imageCallback(data):
 	#change ros image to opencv image
@@ -32,6 +46,9 @@ def imageCallback(data):
 	#resize opencv image
 	(W, H) = (500, 375)
 	imageFrame = cv2.resize(imageFrame, (W,H), interpolation=cv2.INTER_CUBIC)
+
+	if is_image_blurry(imageFrame):
+		return
 
 	if ADJUST_PID:
 		initBB = (W-50, 375/2-50, 50, 100)
@@ -65,6 +82,8 @@ def imageCallback(data):
 			initBB = None
 			msg.is_obj_being_tracked = 0
 			msg.direction_err = 0.0
+			print "Blurriness: ",
+			print get_blurriness(imageFrame)
 
 		# initialize the set of information we'll be displaying on
 		# the frame
@@ -93,6 +112,9 @@ def imageCallback(data):
 		tracker = None
 		tracker = cv2.TrackerMedianFlow_create()
 		tracker.init(imageFrame, initBB)
+	
+	if key == ord("d"):
+		ADJUST_PID = True
 
 def depthCallback(data):
 	try:
@@ -118,57 +140,81 @@ def depthCallback(data):
 		global x, y, w, h
 		BoxCenterX = (x+(w/2))
 		BoxCenterY = (y+(h/2))
-		if depthFrame[BoxCenterY, BoxCenterX] > 600:
-			min = depthFrame[BoxCenterY, BoxCenterX]
 		error = False
-		diff1 = depthFrame[BoxCenterY, BoxCenterX] - depthFrame[BoxCenterY - 2, BoxCenterX - 2]
+		pta = depthFrame[BoxCenterY - 2, BoxCenterX - 2]
+		diff1 = depthFrame[BoxCenterY, BoxCenterX] - pta
 		if diff1 < -200 or diff1 > 200:
 			error = True
-			if diff1 < min and diff1 > 600:
-				min = diff1
-		diff2 = depthFrame[BoxCenterY, BoxCenterX] - depthFrame[BoxCenterY - 2, BoxCenterX]
+		ptb = depthFrame[BoxCenterY - 2, BoxCenterX]
+		diff2 = depthFrame[BoxCenterY, BoxCenterX] - ptb
 		if diff2 < -200 or diff2 > 200:
 			error = True
-			if diff2 < min and diff2 > 600:
-				min = diff2
-		diff3 = depthFrame[BoxCenterY, BoxCenterX] - depthFrame[BoxCenterY - 2, BoxCenterX + 2]
+		ptc = depthFrame[BoxCenterY - 2, BoxCenterX + 2]
+		diff3 = depthFrame[BoxCenterY, BoxCenterX]
 		if diff3 < -200 or diff3 > 200:
 			error = True
-			if diff3 < min and diff3 > 600:
-				min = diff3
-		diff4 = depthFrame[BoxCenterY, BoxCenterX] - depthFrame[BoxCenterY, BoxCenterX - 2]
+		ptd = depthFrame[BoxCenterY, BoxCenterX - 2]
+		diff4 = depthFrame[BoxCenterY, BoxCenterX] - ptd
 		if diff4 < -200 or diff4 > 200:
 			error = True
-			if diff4 < min and diff4 > 600:
-				min = diff4
-		diff5 = depthFrame[BoxCenterY, BoxCenterX] - depthFrame[BoxCenterY, BoxCenterX + 2]
+		pte = depthFrame[BoxCenterY, BoxCenterX + 2]
+		diff5 = depthFrame[BoxCenterY, BoxCenterX] - pte
 		if diff5 < -200 or diff5 > 200:
 			error = True
-			if diff5 < min and diff5 > 600:
-				min = diff5
-		diff6 = depthFrame[BoxCenterY, BoxCenterX] - depthFrame[BoxCenterY + 2, BoxCenterX - 2]
+		ptf = depthFrame[BoxCenterY + 2, BoxCenterX - 2]
+		diff6 = depthFrame[BoxCenterY, BoxCenterX] - ptf
 		if diff6 < -200 or diff6 > 200:
 			error = True
-			if diff6 < min and diff6 > 600:
-				min = diff6
-		diff7 = depthFrame[BoxCenterY, BoxCenterX] - depthFrame[BoxCenterY + 2, BoxCenterX]
+		ptg = depthFrame[BoxCenterY + 2, BoxCenterX]
+		diff7 = depthFrame[BoxCenterY, BoxCenterX] - ptg
 		if diff7 < -200 or diff7 > 200:
 			error = True
-			if diff7 < min and diff7 > 600:
-				min = diff7
-		diff8 = depthFrame[BoxCenterY, BoxCenterX] - depthFrame[BoxCenterY + 2, BoxCenterX + 2]
+		pth = depthFrame[BoxCenterY + 2, BoxCenterX + 2]
+		diff8 = depthFrame[BoxCenterY, BoxCenterX] - pth
 		if diff8 < -200 or diff8 > 200:
 			error = True
-			if diff8 < min and diff8 > 600:
-				min = diff8
 		if error == False:
 			if depthFrame[BoxCenterY, BoxCenterX] > 600:
-				msg.distance_err = depthFrame[BoxCenterY, BoxCenterX]
+				msg.distance_err = (depthFrame[BoxCenterY, BoxCenterX]/10)*10
 				print("Success lah")
 			else:
 				msg.distance_err = -1
 		else:
-			msg.distance_err = min
+			totalDepth = 0
+			totalNum = 8
+			if (pta > 600):
+				totalDepth = totalDepth + pta
+			else:
+				totalNum = totalNum - 1
+			if (ptb > 600):
+				totalDepth = totalDepth + ptb
+			else:
+				totalNum = totalNum - 1
+			if (ptc > 600):
+				totalDepth = totalDepth + ptc
+			else:
+				totalNum = totalNum - 1
+			if (ptd > 600):
+				totalDepth = totalDepth + ptd
+			else:
+				totalNum = totalNum - 1
+			if (pte > 600):
+				totalDepth = totalDepth + pte
+			else:
+				totalNum = totalNum - 1
+			if (ptf > 600):
+				totalDepth = totalDepth + ptf
+			else:
+				totalNum = totalNum - 1
+			if (ptg > 600):
+				totalDepth = totalDepth + ptg
+			else:
+				totalNum = totalNum - 1
+			if (pth > 600):
+				totalDepth = totalDepth + pth
+			else:
+				totalNum = totalNum - 1
+			msg.distance_err = ((totalDepth / totalNum)/10)*10
 			print("You have error ah")
 	
 	#get 9 dots of depth data in box
