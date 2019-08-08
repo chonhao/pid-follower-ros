@@ -104,14 +104,16 @@ int main(int argc, char **argv){
     nh_private.param<double>("direction_kp", pid_direction.p, 0.0);
     nh_private.param<double>("direction_kd", pid_direction.d, 0.0);
 
-    double distance_target, direction_target;
+    double distance_target, direction_target, distance_target_temp, direction_target_temp;
     nh_private.param<double>("distance_target", distance_target, 0.0);
     nh_private.param<double>("direction_target", direction_target, 0.0);
+    distance_target_temp = distance_target;
+    direction_target_temp = direction_target;
     
     ros::Rate loop_rate(5);
     while (ros::ok()){
-        double distance_output = pid_calc(&pid_distance, follower_err.distance_err, distance_target);
-        double direction_output = pid_calc(&pid_direction, follower_err.direction_err, direction_target);
+        double distance_output = pid_calc(&pid_distance, follower_err.distance_err, distance_target_temp);
+        double direction_output = pid_calc(&pid_direction, follower_err.direction_err, direction_target_temp);
 
         if(abs(follower_err.direction_err - direction_target)<40){
             direction_output = 0;
@@ -120,12 +122,15 @@ int main(int argc, char **argv){
         ROS_INFO("output %lf", direction_output);
 
         if(follower_err.is_obj_being_tracked && follower_err.distance_err > 0){
-            setSpeed(SPEED_LINEAR, -1 * distance_output);
-            setSpeed(SPEED_ANGULAR, direction_output);
+            distance_target_temp = distance_target;
+            direction_target_temp = direction_target;
         }else{
-            setSpeed(SPEED_LINEAR, 0);
-            setSpeed(SPEED_ANGULAR, 0);
+            distance_target_temp = follower_err.distance_err;
+            direction_target_temp = follower_err.direction_err;
         }
+
+        setSpeed(SPEED_LINEAR, -1 * distance_output);
+        setSpeed(SPEED_ANGULAR, direction_output);
 
         pub_cmd_vel.publish(my_cmd_vel);
         ros::spinOnce();

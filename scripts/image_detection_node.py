@@ -21,7 +21,7 @@ initBB = None
 
 ADJUST_PID = False
 
-blurriness_threshold = 750
+blurriness_threshold = 600
 
 def get_blurriness(frame):
 	gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -46,9 +46,10 @@ def imageCallback(data):
 
 	#resize opencv image
 	(W, H) = (500, 375)
-	alpha = 2.2						#alpha contrast, beta brightness
-	beta = 50.0
+	alpha = 2.7					#alpha contrast, beta brightness
+	beta = 10.0
 	imageFrame = cv2.resize(imageFrame, (W,H), interpolation=cv2.INTER_CUBIC)
+	imageFrame = cv2.cvtColor(imageFrame, cv2.COLOR_BGR2GRAY)
 	imageFrame = cv2.convertScaleAbs(imageFrame, alpha=alpha, beta=beta)
 
 	if is_image_blurry(imageFrame):
@@ -101,8 +102,7 @@ def imageCallback(data):
 		# loop over the info tuples and draw them on our frame
 		for (i, (k, v)) in enumerate(info):
 			text = "{}: {}".format(k, v)
-			cv2.putText(imageFrame, text, (10, H - ((i * 20) + 20))hist,bins = np.histogram(img.ravel(),256,[0,256])
-	
+			cv2.putText(imageFrame, text, (10, H - ((i * 20) + 20)),
 				cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
 
 	#show output frame
