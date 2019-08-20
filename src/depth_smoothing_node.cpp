@@ -50,16 +50,15 @@ public:
       return;
     }
 
-    cv::Mat depthf(cv_ptr->image.rows, cv_ptr->image.cols, CV_16UC1);
-    cv_ptr->image.convertTo(depthf, CV_16UC1, 1);
+    cv::UMat depthf(cv_ptr->image.rows, cv_ptr->image.cols, CV_16UC1);
+    cv_ptr->image.copyTo(depthf);
     const unsigned char noDepth = 0;
-    cv::Mat temp, temp2;
-    cv::Mat small_depthf; 
+    cv::UMat temp, temp2, mask;
+    cv::UMat small_depthf; 
     resize(depthf, small_depthf, depthf.size(), 0.2, 0.2);
-    cv::inpaint(small_depthf, (small_depthf == noDepth), temp, 5.0, cv::INPAINT_TELEA);
-
-    resize(temp, temp2, depthf.size());
-    temp2.copyTo(depthf, (depthf == noDepth));
+    cv::compare(small_depthf, noDepth, mask, cv::CMP_EQ);
+    cv::inpaint(small_depthf, mask, temp, 1.0, cv::INPAINT_TELEA);
+    // resize(temp, temp2, depthf.size());
 
     // Update GUI Window
     // cv::imshow(OPENCV_WINDOW, cv_ptr->image);
@@ -68,8 +67,8 @@ public:
     // Output modified video stream
     cv_bridge::CvImage img_bridge;
     img_bridge.header = msg->header;
-    img_bridge.encoding = msg->encoding;
-    img_bridge.image = depthf;
+    img_bridge.encoding = sensor_msgs::image_encodings::TYPE_16UC1;
+    img_bridge.image = temp.getMat(cv::ACCESS_FAST);
     image_pub_.publish(img_bridge.toImageMsg());
   }
 };
