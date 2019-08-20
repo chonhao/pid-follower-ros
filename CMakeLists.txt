@@ -18,6 +18,9 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   message_generation
   sensor_msgs
+  cv_bridge
+  image_transport
+  OpenCV
 )
 
 ## System dependencies are found with CMake's conventions
@@ -140,6 +143,7 @@ include_directories(
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(${PROJECT_NAME}_node src/pid_follower_node.cpp)
+add_executable(depth_smoothing_node src/depth_smoothing_node.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -154,6 +158,10 @@ add_executable(${PROJECT_NAME}_node src/pid_follower_node.cpp)
 ## Specify libraries to link a library or executable target against
 target_link_libraries(${PROJECT_NAME}_node
   ${catkin_LIBRARIES}
+)
+
+target_link_libraries(depth_smoothing_node
+  ${catkin_LIBRARIES} ${OpenCV_LIBS}
 )
 
 add_compile_options(-std=c++11)
